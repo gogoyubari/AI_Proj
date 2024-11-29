@@ -54,8 +54,8 @@ import os
 os.environ["CT2_VERBOSE"] = "2" # Ctranslate2のデバッグ情報を表示します（"2"でlog_lebel=DEBUG）
 os.environ["CT2_CUDA_ALLOCATOR"] = "cub_caching" # デフォルトのCUDAキャッシングにメモリリークの疑い？（調査中）別のGPUキャシュ方法を指定しています
 os.environ["CT2_CUDA_CACHING_ALLOCATOR_CONFIG"] = "4,3,15,3221225471"
-os.environ["CUDNN_LOGLEVEL_DBG"] = "2" # Ctranslate2のデバッグ情報を表示します（"2"でlog_lebel=WARNING）
-os.environ["CUDNN_LOGDEST_DBG"] = "stderr" # Ctranslate2のデバッグ情報の出力先
+os.environ["CUDNN_LOGLEVEL_DBG"] = "2" # cuDNNのデバッグ情報を表示します（"2"でlog_lebel=WARNING）
+os.environ["CUDNN_LOGDEST_DBG"] = "stderr" # cuDNNのデバッグ情報の出力先
 
 import time
 import sys
@@ -104,7 +104,7 @@ def whisper(filepath): # whisperメインルーチン
         temperature = [n/10 for n in range(11)], # 再試行時 temperatureを0.1ステップで増加させる
         # beam_size = 5, # 探索の深度 ★
         # condition_on_previous_text = True, # 一つ前の結果をプロンプトに反映するかどうか ★
-        prompt_reset_on_temperature = 0.8, # どこまで崩壊したらパラメータをリセットするか ★
+        prompt_reset_on_temperature = 0.5, # どこまで崩壊したらパラメータをリセットするか ★
         initial_prompt = init_prompt, # 出力のスタイルに影響 ★
         word_timestamps = True, # 単語単位でタイムスタンプ Startとendのタイムが正確になる ★
         vad_filter = True, # 素材によって有利不利が分かれる ★
