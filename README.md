@@ -9,18 +9,17 @@ last update: 2024-11-27
 - 学習モデルは 本家のモデルをCtranslate2用にコンバートされたものを使います。
 
 ## GPU環境構築
-1. [CUDA 12.4](https://developer.nvidia.com/cuda-12-4-1-download-archive) と [cuDNN](https://developer.nvidia.com/cudnn-downloads) をインストールします。
+1. [CUDA 12.6](https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64&target_version=11&target_type=exe_local) をインストールします。
 
 2. CUDAのバージョン確認
 ```ps
 PS > nvcc -V
 ```
+
+3. [cuDNN 9.5.1](https://developer.nvidia.com/cudnn-downloads?target_os=Windows&target_arch=x86_64&target_version=Agnostic&cuda_version=12) をダウンロード後 解凍した```bin\```フォルダのすべての.dllファイルを```C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin\```フォルダにコピーします。
 > [!IMPORTANT]
-> ***CUDA 12.4***に対応するcuDNNのバージョンは***9.5.1***となります。
+> ***CUDA 12.6***に対応するcuDNNのバージョンは***9.5.1***となります。
 >
-
-3. cuDNNインストール後 ```C:\Program Files\NVIDIA\CUDNN\v9.5\bin\12.6\```フォルダのすべての.dllファイルを```C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\```フォルダにコピーします。
-
 4. システム環境変数にCUDA_PATHが設定されているか確認
 ```ps
 PS> echo $env:CUDA_PATH
@@ -29,6 +28,17 @@ PS> echo $env:CUDA_PATH
 ```ps
 (.venv) PS> pip install faster-whisper
 ```
+<details>
+<summary>Other installation methods (click to expand)</summary>
+  
+### initial_prompt 修正パッチ版のインストール
+  
+```ps
+(.venv) PS> pip install --force-reinstall "faster-whisper @ https://github.com/gogoyubari/faster-whisper/archive/refs/heads/master.tar.gz"
+```
+
+</details>
+
 ## テストプログラムの実行
 ```ps
 (.venv) PS> pip install pysubs2 term-printer
@@ -45,11 +55,17 @@ import os
 os.environ["CT2_VERBOSE"] = "2" # Ctranslate2のデバッグ情報を表示します（"2"でlog_lebel=DEBUG）
 os.environ["CT2_CUDA_ALLOCATOR"] = "cub_caching" # デフォルトのCUDAキャッシングにメモリリークの疑い？（調査中）別のGPUキャシュ方法を指定しています
 os.environ["CT2_CUDA_CACHING_ALLOCATOR_CONFIG"] = "4,3,15,3221225471"
+os.environ["CUDNN_LOGLEVEL_DBG"] = "2" # Ctranslate2のデバッグ情報を表示します（"2"でlog_lebel=WARNING）
+os.environ["CUDNN_LOGDEST_DBG"] = "stderr" # Ctranslate2のデバッグ情報の出力先
 
 import time
 import sys
 from faster_whisper import WhisperModel
 from faster_whisper.vad import VadOptions
+from ctranslate2 import set_random_seed
+import logging
+logging.basicConfig()
+logging.getLogger("faster_whisper").setLevel(logging.DEBUG)
 
 import pysubs2 # whisper出力を.srtフォーマットで出力するライブラリ
 from term_printer import Color, cprint # 色付きのprint()関数 cprint()を使う
@@ -73,16 +89,20 @@ def whisper(filepath): # whisperメインルーチン
         model_size_or_path=model_size_or_path,
         device="cuda",
         compute_type="float16", # 量子化タイプ "int8_float16"にすると軽くなるが精度が落ちる ★
+        download_root="model", # modelのダウンロード場所を指定
     ) # 初回実行時にのみ モデルの実体がデフォルトで"C:\User\[ユーザー]\.cache\huggingface\hub\"にダウンロードされる（ダウンロード場所は別途指定可能）
+    set_random_seed(0) # Ctranslate2の乱数シードを固定する
 
-    with open('initial_prompt.txt', encoding="utf_8_sig") as f: # "initial_prompt"を準備する
+    with open('initial_prompt_J.txt', encoding="utf_8_sig") as f: # "initial_prompt"を準備する
         lines = f.read().strip().split('\n')
-        init_prompt = ''.join(['<|0.00|> ' + line.strip() + '<|0.00|>' for line in lines])
+        init_prompt = ''.join(['<|0.00|> ' + line.strip() + '<|0.00|>' for line in lines]) # プロンプトにダミーのタイムスタンプtokenを挿入
         print("initial_prompt has been loaded.")
 
     segments, info = model.transcribe(
         audio = filepath, # 内部でpcm/16bit/16KHz/monoのオーディオデータに変換するので、入力ファイルのフォーマットは何でもOK
-        language = "en", # 言語を明示的に指定 "ja"...
+        language = "ja", # 言語を明示的に指定 "en"...
+        log_progress = False, # Trueでプログレスバー表示
+        temperature = [n/10 for n in range(11)], # 再試行時 temperatureを0.1ステップで増加させる
         # beam_size = 5, # 探索の深度 ★
         # condition_on_previous_text = True, # 一つ前の結果をプロンプトに反映するかどうか ★
         prompt_reset_on_temperature = 0.8, # どこまで崩壊したらパラメータをリセットするか ★
@@ -110,8 +130,8 @@ def whisper(filepath): # whisperメインルーチン
             col = Color.YELLOW
         cprint(f"[{segment.id}] {tsToStr(segment.start)} {tsToStr(segment.end)} {segment.text}", attrs=[col]) # デバッグ用出力
         d.append(dataclasses.asdict(segment))
-
-    print(f"time: {time.time()-start}") # 処理時間計測
+    else:
+      print(f"time: {time.time()-start}") # 処理時間計測
 
     subs = pysubs2.load_from_whisper(d)
     base_name = os.path.splitext(os.path.basename(filepath))[0] # .srtのファイル名は入力ファイル名を流用
@@ -124,7 +144,9 @@ if __name__ == '__main__':
         try:
             whisper(args[1])
         except KeyboardInterrupt:
-            pass
+            print("main_thread has been interrupted.")
+        except Exception as e:
+            print(e)
 ```
 ## 観察される問題点
 - 文末が句点".,!?"にならない
