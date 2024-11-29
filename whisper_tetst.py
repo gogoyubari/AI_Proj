@@ -52,7 +52,7 @@ def whisper(filepath):
         temperature = [n/10 for n in range(11)],
         # beam_size = 5,
         # condition_on_previous_text = True,
-        prompt_reset_on_temperature = 0.8,
+        # prompt_reset_on_temperature = 0.5,
         initial_prompt = init_prompt,
         word_timestamps = True,
         vad_filter = True,
