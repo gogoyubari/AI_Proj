@@ -1,4 +1,3 @@
-last update: 2024-11-27
 # ① faster-whisperの導入編
 ***```whisper_test.py```*** は faster-whisperの動作確認用として 現在開発中のシステムから基本部分のみを抜き出したものです。
 - 設定パラメーターによる挙動の確認
