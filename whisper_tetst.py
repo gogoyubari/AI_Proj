@@ -49,7 +49,7 @@ def whisper(filepath):
         audio = filepath,
         language = "ja",
         log_progress = False,
-        temperature = [n/10 for n in range(11)],
+        # temperature = [n/10 for n in range(11)],
         # beam_size = 5,
         # condition_on_previous_text = True,
         # prompt_reset_on_temperature = 0.5,
@@ -57,21 +57,21 @@ def whisper(filepath):
         word_timestamps = True,
         vad_filter = True,
         vad_parameters = VadOptions(
-            # onset = 0.4,
-            # offset = 0.263,
+            # threshold = 0.5,
+            # neg_threshold = 0.35,
             # min_speech_duration_ms = 0,
             # max_speech_duration_s = 2.0,
             # min_silence_duration_ms = 500,
-            speech_pad_ms = 800
+            # speech_pad_ms = 800
         ),
-        hallucination_silence_threshold = 0.2
+        hallucination_silence_threshold = 2.0,
     )
 
     d = []
     start = time.time()
 
     for segment in segments:
-        if re.match(r'.*[\.\,\?\!]$', segment.text):
+        if re.match(r'.*[\.\,\?\!。、？！…]$', segment.text):
             col = Color.WHITE
         else:
             col = Color.YELLOW
