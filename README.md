@@ -12,7 +12,7 @@
 
 2. CUDAのバージョン確認
 ```ps
-PS > nvcc -V
+nvcc -V
 ```
 
 3. [cuDNN 9.5.1](https://developer.nvidia.com/cudnn-downloads?target_os=Windows&target_arch=x86_64&target_version=Agnostic&cuda_version=12) をダウンロード後 解凍した```bin\```フォルダのすべての.dllファイルを```C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin\```フォルダにコピーします。
@@ -21,29 +21,29 @@ PS > nvcc -V
 >
 4. システム環境変数にCUDA_PATHが設定されているか確認
 ```ps
-PS> echo $env:CUDA_PATH
+echo $env:CUDA_PATH
 ```
 ## faster-whisperのインストール
 ```ps
-(.venv) PS> pip install faster-whisper
+pip install faster-whisper
 ```
 <details>
-<summary>修正パッチ版のインストール(click to expand)</summary>
+<summary>修正パッチ版 (click to expand)</summary>
   
 ### initial_prompt 修正パッチ版のインストール
   
 ```ps
-(.venv) PS> pip install --force-reinstall "faster-whisper @ https://github.com/gogoyubari/faster-whisper/archive/refs/heads/master.tar.gz"
+pip install --force-reinstall "faster-whisper @ https://github.com/gogoyubari/faster-whisper/archive/refs/heads/master.tar.gz"
 ```
 
 </details>
 
 ## テストプログラムの実行
 ```ps
-(.venv) PS> pip install pysubs2 term-printer
+pip install pysubs2 term-printer
 ```
 ```ps
-(.venv) PS> python whisper_test.py C:\[メディアファイルのフォルダ]\test.mp4
+python whisper_test.py C:\[メディアファイルのフォルダ]\test.mp4
 ```
 ### whisper_test.py の説明
 > [!NOTE]
