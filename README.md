@@ -28,7 +28,7 @@ PS> echo $env:CUDA_PATH
 (.venv) PS> pip install faster-whisper
 ```
 <details>
-<summary>Other installation methods (click to expand)</summary>
+<summary>修正パッチ版のインストール(click to expand)</summary>
   
 ### initial_prompt 修正パッチ版のインストール
   
