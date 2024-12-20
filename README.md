@@ -101,22 +101,22 @@ def whisper(filepath): # whisperメインルーチン
         audio = filepath, # 内部でpcm/16bit/16KHz/monoのオーディオデータに変換するので、入力ファイルのフォーマットは何でもOK
         language = "ja", # 言語を明示的に指定 "en"...
         log_progress = False, # Trueでプログレスバー表示
-        temperature = [n/10 for n in range(11)], # 再試行時 temperatureを0.1ステップで増加させる
+        # temperature = [n/10 for n in range(11)], # 再試行時 temperatureを0.1ステップで増加させる
         # beam_size = 5, # 探索の深度 ★
         # condition_on_previous_text = True, # 一つ前の結果をプロンプトに反映するかどうか ★
-        prompt_reset_on_temperature = 0.5, # どこまで崩壊したらパラメータをリセットするか ★
+        # prompt_reset_on_temperature = 0.5, # どこまで崩壊したらパラメータをリセットするか ★
         initial_prompt = init_prompt, # 出力のスタイルに影響 ★
         word_timestamps = True, # 単語単位でタイムスタンプ Startとendのタイムが正確になる ★
         vad_filter = True, # 素材によって有利不利が分かれる ★
         vad_parameters = VadOptions( # vad_filter=Trueのときに有効 "#"でコメントアウトした設定はデフォルト値となる ★
-            # onset = 0.4,
-            # offset = 0.263,
+            # threshold = 0.5,
+            # neg_threshold = 0.35,
             # min_speech_duration_ms = 0,
             # max_speech_duration_s = 2.0,
             # min_silence_duration_ms = 500,
-            speech_pad_ms = 800
+            # speech_pad_ms = 800,
         ),
-        hallucination_silence_threshold = 0.2 # ハルシネーション検出の閾値 ★
+        hallucination_silence_threshold = 2.0 # ハルシネーション検出の閾値(sec) ★
     )
 
     d = []
